@@ -1,0 +1,4 @@
+Nov. 5, 2021
+Got rid of DS Store in each of the data files for the animals.
+This is a recurring error that will require the same kind of fix 
+over again for each animal with data.

@@ -22,9 +22,10 @@ counter = 0
 directory = ['/Users/emmabarash/lab/data/eb10_data/taste']
 
 for i in directory:
-    print(i[-15:-11])
+    print(i[-14:-10])
     for filename in os.listdir(i):
         if i[-15:-11] == "eb10":
+        # if i[-14:-10] == "eb10":
             animal1.append(filename)
         animal1.sort()
    
@@ -55,6 +56,7 @@ animal1_line1_counts = []
 animal1_line2_counts = []
 animal1_line3_counts = []
 animal1_line4_counts = []
+animal1_trigger = []
 
 
 def count_in_trial(list):
@@ -66,37 +68,29 @@ def count_in_trial(list):
         prev_i = i
     return counter
 
-counter = 0
-trigger = []
-
-def find_missed_trials(files, trigger):
-    for f in files:
-        trigger.append(count_in_trial(f["Poke1"]))
-        
-find_missed_trials(animal1_files, trigger)
-
-
-def setup_for_trial_counts(files, line1, line2, line3, line4):
+def setup_for_trial_counts(files, line1, line2, line3, line4, trigger):
     for f in files:
         line4.append(count_in_trial(f["Line4"]))
         line3.append(count_in_trial(f["Line3"]))
         line2.append(count_in_trial(f["Line2"]))
         line1.append(count_in_trial(f["Line1"]))
+        trigger.append(count_in_trial(f["Poke1"]))
 
 setup_for_trial_counts(animal1_files, animal1_line1_counts,
-                       animal1_line2_counts, animal1_line3_counts, animal1_line4_counts)
+                       animal1_line2_counts, animal1_line3_counts, animal1_line4_counts, animal1_trigger)
 p = inflect.engine()
 
+plt.ylim(0,35)
 x = range(1,len(animal1_files)+1)
 plt.title("EB10: deliveries across first " + p.number_to_words(len(animal1_files)) + " taste sessions")
 plt.xlabel("sessions")
 plt.ylabel("deliveries")
-plt.scatter(x, animal1_line1_counts, c='blue')
-plt.plot(x, animal1_line1_counts, c='blue')
+plt.scatter(x, animal1_line1_counts)
+plt.plot(x, animal1_line1_counts)
 plt.scatter(x, animal1_line2_counts)
 plt.plot(x, animal1_line2_counts)
-plt.scatter(x, animal1_line3_counts, c='green')
-plt.plot(x, animal1_line3_counts, c='green')
+plt.scatter(x, animal1_line3_counts)
+plt.plot(x, animal1_line3_counts)
 plt.scatter(x, animal1_line4_counts)
 plt.plot(x, animal1_line4_counts)
 plt.legend(["0.3M suc", '_nolegend_', "0.1M NaCl", '_nolegend_', "1M NaCl", 

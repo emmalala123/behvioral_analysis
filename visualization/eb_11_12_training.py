@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jul 27 20:54:20 2021
+Created on Thu Jul 28 21:49:10 2022
 
 @author: emmabarash
 """
@@ -9,30 +9,26 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os 
-import scipy.stats as st
+import scipy.stats
 import seaborn as sns
 import random
 
 eb1 = []
 eb2 = []
-eb3 = []
 names = []
 counter = 0
 directory = ['/Users/emmabarash/Lab/data/eb11_data','/Users/emmabarash/Lab/data/eb12_data']
 
 for i in directory:
-    print(i)
+    print(i[-9:-5])
     for filename in os.listdir(i):
-        if i[-16:-13] == "eb11":
-            
+        if i[-9:-5] == "eb11":
             eb1.append(filename)
         eb1.sort()
-        if i[-16:-13] == "eb12":
+        if i[-9:-5] == "eb12":
             eb2.append(filename)
         eb2.sort()
-        if i[-16:-13] == "eb3":
-            eb3.append(filename)
-        eb3.sort()
+
     
 def join_files(list, files):
     for i in directory:
@@ -45,8 +41,6 @@ eb1_files = []
 join_files(eb1, eb1_files)
 eb2_files = []
 join_files(eb2, eb2_files)
-eb3_files = []
-join_files(eb3, eb3_files)
 
 # convert data frame values from strings to bool
 def convert(files):
@@ -57,7 +51,6 @@ def convert(files):
 
 convert(eb1_files)
 convert(eb2_files)
-convert(eb3_files)
 
 # totals for the trigger and rewarder side activation
 eb1_trig_counts = []
@@ -65,9 +58,6 @@ eb1_rew_counts = []
 
 eb2_trig_counts = []
 eb2_rew_counts = []
-
-eb3_trig_counts = []
-eb3_rew_counts = []
 
 rew_all = []
 
@@ -78,6 +68,7 @@ def count_in_trial(list):
         if i != prev_i and i != False:
             counter = counter + 1
         prev_i = i
+    rew_all.append(counter)
     return counter
 
 
@@ -88,23 +79,9 @@ def setup_for_trial_counts(files, trig_counts, rew_counts):
 
 setup_for_trial_counts(eb1_files, eb1_trig_counts, eb1_rew_counts)
 setup_for_trial_counts(eb2_files, eb2_trig_counts, eb2_rew_counts)
-setup_for_trial_counts(eb3_files, eb3_trig_counts, eb3_rew_counts)
-
-rew_all = [np.add(eb1_trig_counts, eb1_rew_counts),\
-           np.add(eb2_trig_counts, eb2_rew_counts),\
-               np.add(eb3_trig_counts, eb3_rew_counts)]
-
-rew_all = np.array(rew_all)
-mean_all = []
-for i in rew_all.T:
-    mean_all.append(np.mean(i))
-
-mean_all = np.array(mean_all)
-low, high = st.t.interval(alpha=0.95, df=len(mean_all)-1, loc=np.mean(mean_all), scale=st.sem(mean_all)) 
 
 eb1_percentage = []
 eb2_percentage = []
-eb3_percentage = []
 def find_percentage(trig_counts, rew_counts, percentage):
     # create a session-by-session comparison
     total = zip(trig_counts, rew_counts)
@@ -119,9 +96,9 @@ def find_percentage(trig_counts, rew_counts, percentage):
 
 find_percentage(eb1_trig_counts, eb1_rew_counts, eb1_percentage)
 find_percentage(eb2_trig_counts, eb2_rew_counts, eb2_percentage)
-find_percentage(eb3_trig_counts, eb3_rew_counts, eb3_percentage)
         
-percentage_all = [eb1_percentage, eb2_percentage, eb3_percentage]
+# percentage_all = [eb1_percentage, eb2_percentage, eb3_percentage, eb4_percentage, eb5_percentage ,eb6_percentage]
+percentage_all = [eb1_rew_counts, eb2_rew_counts]
 
 #pad the data to make exact same column (session) length
 max_sess = np.max([len(x) for x in percentage_all])
@@ -135,26 +112,24 @@ pad_matrix = np.asarray([x if len(x)==max_sess else\
 #np.concatenate(x,np.ones_like(max_sess-len(x)))
 # cutoff at 6 days
 #plt.ylim(0,105)
-#plt.xlim(0,4)
-#plt.errorbar(range(max_sess),np.nanmean(pad_matrix,0), yerr=np.nanstd(pad_matrix,0))
-#plt.errorbar(range(max_sess),np.nanmean(pad_matrix,0))
-plt.plot(range(max_sess),np.nanmean(pad_matrix,0))
-plt.fill_between(range(max_sess), (np.nanmean(pad_matrix,0) - low), (np.std(pad_matrix,0)+high), color='r', alpha=.05)
-#plt.axhline(90,c='black',linestyle=':')
-plt.xlabel("Number of sessions")
-plt.ylabel("Performance after x-days of Subtractive shaping")
+plt.errorbar(range(1,max_sess+1),np.nanmean(pad_matrix,0))
+plt.xlabel("Number of Sessions")
+plt.ylabel("Performance after x-days of Additive Shaping")
+#plt.legend(["90% threshold for learning", "% successful alternations"], facecolor="white", loc='lower right')
 plt.title("All Animals: Percentage of Completed Alternations Per Session")
-# yerr=np.std(pad_matrix,0)
-
-
 plt.ylim(0,105)
-plt.xlim(0.5,4.5)
-plt.errorbar(range(1, max_sess+1),np.nanmean(pad_matrix,0))
+plt.xlim(0,8.5)
+# plt.errorbar(range(8),np.nanmean(pad_matrix,0)[0:8])
 plt.scatter(range(1, max_sess+1),pad_matrix[0], c='blue', alpha=0.5, s=15) 
-plt.scatter(range(1, max_sess+1),pad_matrix[1], c='purple', alpha=0.5, s=15) 
-plt.scatter(range(1, max_sess+1),pad_matrix[2], c='goldenrod', alpha=0.9, s=15) 
-plt.legend(["EB1", "EB2", "EB3"], facecolor="white", loc="lower right")
+plt.scatter(range(1,max_sess+1),pad_matrix[1], c='purple', alpha=0.5, s=15) 
+# plt.scatter(range(max_sess),pad_matrix[2], c='goldenrod', alpha=0.5, s=15) 
+# plt.scatter(range(max_sess),pad_matrix[3], c='red', alpha=0.5, s=15) 
+# plt.scatter(range(max_sess),pad_matrix[4], c='green', alpha=0.5, s=15) 
+# plt.scatter(range(max_sess),pad_matrix[5], c='orange', alpha=0.5, s=15) 
+plt.legend(["EB4", "EB5", "EB6", "EB7", "EB8", "EB9"], facecolor="white", loc="lower right")
 plt.axhline(90,c='black',linestyle=':')
-plt.xticks([1, 2, 3, 4])
-#"90% threshold for learning",
-#"% successful alternations"
+plt.show()
+#### confidence intervals
+#sns.lineplot(range(max_sess),eb1_percentage)
+
+

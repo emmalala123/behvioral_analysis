@@ -13,36 +13,25 @@ import scipy.stats
 import seaborn as sns
 import random
 
-eb1 = []
-eb2 = []
-eb3 = []
+
 eb4 = []
 eb5 = []
 eb6 = []
 names = []
 counter = 0
-directory = ['/Users/emmabarash/Lab/data/eb4_data/stage_3','/Users/emmabarash/Lab/data/eb5_data/stage_3',\
-             '/Users/emmabarash/Lab/data/eb6_data/stage_3', '/Users/emmabarash/Lab/data/eb7_data/stage_3',\
-                 '/Users/emmabarash/Lab/data/eb8_data/stage_3', '/Users/emmabarash/Lab/data/eb9_data/stage_3']
+directory = ['/Users/emmabarash/Lab/data/eb10_data','/Users/emmabarash/Lab/data/eb11_data',\
+             '/Users/emmabarash/Lab/data/eb12_data']
 
 for i in directory:
     for filename in os.listdir(i):
-        if i[-16:-13] == "eb4":
-            eb1.append(filename)
-        eb1.sort()
-        if i[-16:-13] == "eb5":
-            eb2.append(filename)
-        eb2.sort()
-        if i[-16:-13] == "eb6":
-            eb3.append(filename)
-        eb3.sort()
-        if i[-16:-13] == "eb7":
+
+        if i[-9:-5] == "eb10":
             eb4.append(filename)
         eb4.sort()
-        if i[-16:-13] == "eb8":
+        if i[-9:-5] == "eb11":
             eb5.append(filename)
         eb5.sort()
-        if i[-16:-13] == "eb9":
+        if i[-9:-5] == "eb12":
             eb6.append(filename)
         eb6.sort()
     
@@ -53,12 +42,7 @@ def join_files(list, files):
             if os.path.isfile(f):
                 files.append(pd.read_csv(f))
                 
-eb1_files = []
-join_files(eb1, eb1_files)
-eb2_files = []
-join_files(eb2, eb2_files)
-eb3_files = []
-join_files(eb3, eb3_files)
+
 eb4_files = []
 join_files(eb4, eb4_files)
 eb5_files = []
@@ -70,25 +54,14 @@ join_files(eb6, eb6_files)
 def convert(files):
     converted = []       
     for i in range(len(files)):
-        converted.append(files[i].replace({"None": False, "suc": True, "nacl": True}))
+        converted.append(files[i].replace({"None": False, "suc": True, "qhcl": True}))
     files = converted
 
-convert(eb1_files)
-convert(eb2_files)
-convert(eb3_files)
 convert(eb4_files)
 convert(eb5_files)
 convert(eb6_files)
 
 # totals for the trigger and rewarder side activation
-eb1_trig_counts = []
-eb1_rew_counts = []
-
-eb2_trig_counts = []
-eb2_rew_counts = []
-
-eb3_trig_counts = []
-eb3_rew_counts = []
 
 eb4_trig_counts = []
 eb4_rew_counts = []
@@ -117,16 +90,11 @@ def setup_for_trial_counts(files, trig_counts, rew_counts):
         trig_counts.append(count_in_trial(f["Line2"]))
         rew_counts.append(count_in_trial(f["Line1"]))
 
-setup_for_trial_counts(eb1_files, eb1_trig_counts, eb1_rew_counts)
-setup_for_trial_counts(eb2_files, eb2_trig_counts, eb2_rew_counts)
-setup_for_trial_counts(eb3_files, eb3_trig_counts, eb3_rew_counts)
 setup_for_trial_counts(eb4_files, eb4_trig_counts, eb4_rew_counts)
 setup_for_trial_counts(eb5_files, eb5_trig_counts, eb5_rew_counts)
 setup_for_trial_counts(eb6_files, eb6_trig_counts, eb6_rew_counts)
 
-eb1_percentage = []
-eb2_percentage = []
-eb3_percentage = []
+
 eb4_percentage = []
 eb5_percentage = []
 eb6_percentage = []
@@ -142,14 +110,12 @@ def find_percentage(trig_counts, rew_counts, percentage):
             if percent <= 100 and percent > 0:
                 percentage.append(percent)
 
-find_percentage(eb1_trig_counts, eb1_rew_counts, eb1_percentage)
-find_percentage(eb2_trig_counts, eb2_rew_counts, eb2_percentage)
-find_percentage(eb3_trig_counts, eb3_rew_counts, eb3_percentage)
+
 find_percentage(eb4_trig_counts, eb4_rew_counts, eb4_percentage)
 find_percentage(eb5_trig_counts, eb5_rew_counts, eb5_percentage)
 find_percentage(eb6_trig_counts, eb6_rew_counts, eb6_percentage)
         
-percentage_all = [eb1_percentage, eb2_percentage, eb3_percentage, eb4_percentage, eb5_percentage ,eb6_percentage]
+percentage_all = [eb4_percentage, eb5_percentage ,eb6_percentage]
 
 #pad the data to make exact same column (session) length
 max_sess = np.max([len(x) for x in percentage_all])
@@ -169,15 +135,15 @@ plt.ylabel("Performance after x-days of Additive Shaping")
 #plt.legend(["90% threshold for learning", "% successful alternations"], facecolor="white", loc='lower right')
 plt.title("All Animals: Percentage of Completed Alternations Per Session")
 plt.ylim(0,105)
-plt.xlim(0,8.5)
-plt.errorbar(range(8),np.nanmean(pad_matrix,0)[0:8])
+plt.xlim(0.5,8.5)
+plt.errorbar(range(5),np.nanmean(pad_matrix,0)[0:8])
 plt.scatter(range(max_sess),pad_matrix[0], c='blue', alpha=0.5, s=15) 
 plt.scatter(range(max_sess),pad_matrix[1], c='purple', alpha=0.5, s=15) 
 plt.scatter(range(max_sess),pad_matrix[2], c='goldenrod', alpha=0.5, s=15) 
 plt.scatter(range(max_sess),pad_matrix[3], c='red', alpha=0.5, s=15) 
 plt.scatter(range(max_sess),pad_matrix[4], c='green', alpha=0.5, s=15) 
 plt.scatter(range(max_sess),pad_matrix[5], c='orange', alpha=0.5, s=15) 
-plt.legend(["EB4", "EB5", "EB6", "EB7", "EB8", "EB9"], facecolor="white", loc="lower right")
+plt.legend(["EB10", "EB11", "EB12"], facecolor="white", loc="lower right")
 plt.axhline(90,c='black',linestyle=':')
 plt.show()
 #### confidence intervals

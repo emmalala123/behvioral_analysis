@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Aug  1 11:05:37 2022
+Created on Wed Aug  3 08:27:55 2022
 
 @author: emmabarash
 """
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,6 +14,7 @@ import seaborn as sns
 import glob
 import random
 import inflect
+from scipy import stats
 import re
 
 if os.sep == '/':
@@ -29,10 +29,10 @@ finaldf = pd.DataFrame(columns = ['Time', 'Poke1', 'Poke2', 'Line1', 'Line2', 'L
        'Delivery_Time', 'Latencies'])
 filelist.sort()
 # for f in filelist:
-for f in range(7):
+for f in range(len(filelist)):
     df = pd.read_csv(filelist[f])
     group = df
-    col = ['Line1', 'Line2', 'Line3', 'Line4']
+    col = ['Line1', 'Line2']
     
     # TODO: must figure out index start-1 for next taste in relation to current taste 
     # to mark activity specific to the delivery even after the taste has been delivered
@@ -48,10 +48,6 @@ for f in range(7):
             if col == 'Line1': 
                 taste = 'suc'
             if col == 'Line2':
-                taste = 'low_NaCl'
-            if col == 'Line3':
-                taste = 'high_NaCl'
-            if col == 'Line4':
                 taste = 'qhcl'
                 
             cols = ['Time']+[col]
@@ -80,11 +76,8 @@ for f in range(7):
                 
         return group, delivery_idx
     
-    new_df, delivery_idx = parse_edges(df, ['Line1', 'Line2', 'Line3', 'Line4'])
+    new_df, delivery_idx = parse_edges(df, ['Line1', 'Line2'])
     
-        
-    # copy = new_df
-    # poke = 'Poke2'
     def find_poke_dat(copy, poke, delivery_idx):
         # instantiate new columns with null values for later use
         copy['Taste_Delivery'] = False
@@ -137,26 +130,82 @@ for f in range(7):
     
     deliveries_only = find_poke_dat(new_df,'Poke2', delivery_idx)
     finaldf = finaldf.append(deliveries_only)
-        
+    
+def add_days_elapsed(finaldf):
+   
+    new_df = finaldf
+    
+    res = []
+    for name, group in new_df.groupby('AnID'):
+        i=1
+        # if name == 'eb10':
+        #     i = 1
+        # if name == 'eb11':
+        #     i = 14
+        # if name == 'eb12':
+        #     i = 9
+        for n, g in group.groupby('Date'):
+            print(g)
+            bit = np.zeros(len(g))
+            bit = bit + i
+            res.extend(bit)
+            i += 1
+    new_df['Sessions'] = res
+    # def getElapsed(grp):
+    #     startDate = grp.iloc[0]
+    #     return ((grp - startDate) / np.timedelta64(1, 'D')).astype(int)
+    
+    # new_df['dcol'] = pd.to_datetime(new_df['Date'], format = '%m%d%y')
+    # new_df['elapsed'] = finaldf.groupby('AnID').dcol.transform(getElapsed)
+
+    return new_df
+
+new_df = add_days_elapsed(finaldf)
+
+# def offset_sessions(new_df):
+#     df = new_df
+    
+#     for 
+
+def cumulativedels(new_df):
+    csum = new_df.groupby(['AnID','Sessions','TasteID']).Taste_Delivery.sum()
+    csum = csum.reset_index()
+    return csum
+
+csum = cumulativedels(new_df)
+means = csum.groupby(["TasteID","Sessions"]).Taste_Delivery.mean().reset_index()
+fig, ax = plt.subplots(figsize=(12,7))
+p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Taste_Delivery", hue = "TasteID", style = "AnID")
+p2 = sns.lineplot(data = means, x = "Sessions", y = "Taste_Delivery", hue = "TasteID")
+
+
+##latency plot   
 sns.barplot(deliveries_only['TasteID'], deliveries_only['Latencies'])
-
-t = sns.FacetGrid(finaldf, col = "Date")
+cmap = plt.get_cmap('tab10')
+t = sns.catplot(
+    data=new_df,
+    x = 'TasteID',
+    y='Latencies',
+    col='Sessions',
+    kind='bar',
+    order = ['suc', 'qhcl'],
+    color=cmap(0)
+    )
+t.fig.suptitle("All Animals Poke-to-Poke Latencies for Two Tastes", x=.80, fontsize=15)
 [plt.setp(ax.get_xticklabels(), rotation=45) for ax in t.axes.flat]
-t.map_dataframe(sns.barplot, "TasteID","Latencies")
-t.fig.subplots_adjust(0.5, top=0.8)
-t.fig.suptitle(deliveries_only['AnID'][0] + " Poke-to-Poke Latencies for Four Tases")
-
+t.fig.subplots_adjust(0.6,top=0.8, wspace=0.2)
+##
 
 cmap = plt.get_cmap('tab10')
 t = sns.catplot(
-    data = finaldf,
-    x = 'TasteID',
-    y = 'Latencies',
-    col = 'Date',
-    kind = 'bar',
-    order = ['suc','high_NaCl','low_NaCl', 'qhcl'],
-    col_wrap = 4,
-    color = cmap(0)
+    data=deliveries_only,
+    x = None,
+    y='Taste_Delivery',
+    col='AnID',
+    kind='count',
+    # order = ['suc', 'qhcl'],
+    color=cmap(0)
     )
 
-    
+
+stats.ttest_ind(finaldf['TasteID'],finaldf['Latencies'])

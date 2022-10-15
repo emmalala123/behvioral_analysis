@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  3 08:27:55 2022
+Created on Sun Sep 18 12:05:56 2022
 
 @author: emmabarash
 """
@@ -28,16 +28,12 @@ finaldf = pd.DataFrame(columns = ['Time', 'Poke1', 'Poke2', 'Line1', 'Line2', 'L
        'Cue2', 'Cue3', 'Cue4', 'TasteID', 'AnID', 'Date', 'Taste_Delivery',
        'Delivery_Time', 'Latencies'])
 filelist.sort()
-# for f in filelist:
+
 for f in range(len(filelist)):
     df = pd.read_csv(filelist[f])
     group = df
     col = ['Line1', 'Line2']
     
-    # TODO: must figure out index start-1 for next taste in relation to current taste 
-    # to mark activity specific to the delivery even after the taste has been delivered
-    # so far this function marks the delivery identity in relation to when the valve is open 
-    # during the session.
     def parse_edges(group,col):
         delivery_idx = []
         group['TasteID'] = None
@@ -66,7 +62,6 @@ for f in range(len(filelist)):
             test = pd.merge(edgeON,edgeOFF,left_index=True,right_index=True)
             test['dt'] = test.TimeOff-test.TimeOn
     
-            # delivery_idx = []
             for i, row in test.iterrows():
                 start = int(np.where(df['Time'] == test['TimeOn'][i])[0])
                 stop = int(np.where(df['Time'] == test['TimeOff'][i])[0])
@@ -138,12 +133,6 @@ def add_days_elapsed(finaldf):
     res = []
     for name, group in new_df.groupby('AnID'):
         i=1
-        # if name == 'eb10':
-        #     i = 1
-        # if name == 'eb11':
-        #     i = 14
-        # if name == 'eb12':
-        #     i = 9
         for n, g in group.groupby('Date'):
             print(g)
             bit = np.zeros(len(g))
@@ -151,21 +140,10 @@ def add_days_elapsed(finaldf):
             res.extend(bit)
             i += 1
     new_df['Sessions'] = res
-    # def getElapsed(grp):
-    #     startDate = grp.iloc[0]
-    #     return ((grp - startDate) / np.timedelta64(1, 'D')).astype(int)
-    
-    # new_df['dcol'] = pd.to_datetime(new_df['Date'], format = '%m%d%y')
-    # new_df['elapsed'] = finaldf.groupby('AnID').dcol.transform(getElapsed)
 
     return new_df
 
 new_df = add_days_elapsed(finaldf)
-
-# def offset_sessions(new_df):
-#     df = new_df
-    
-#     for 
 
 def cumulativedels(new_df):
     csum = new_df.groupby(['AnID','Sessions','TasteID', 'Latencies']).Taste_Delivery.sum()
@@ -248,5 +226,84 @@ t = sns.catplot(
     color=cmap(0)
     )
 
+copy = new_df
 
-# stats.ttest_ind(finaldf['TasteID'],finaldf['Latencies'])
+# hard-code the time 35min 2100, 60min 3600
+#def find_half_time(copy):
+    
+   # copy['Section'] = None
+   
+first_half = copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb12')]
+second_half = copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600) & (copy['AnID'] == 'eb12')]
+
+def makefig(dat, name):
+    sns.set_theme(style='white')
+    t = sns.catplot(
+        data=dat,
+        kind='bar',
+        x = 'Sessions',
+        y='Latencies',
+        #col='Sessions',
+        hue = 'TasteID',
+        # color=cmap(0)
+        # height = 8,
+        aspect = 12/7,
+        hue_order = ['suc', 'qhcl']
+        )
+    t = sns.swarmplot(
+        data=dat,
+        x = 'Sessions',
+        y='Latencies',
+        #col = 'Sessions',
+        hue_order = ['suc', 'qhcl'],
+        hue = "TasteID",
+        #color = "TasteID",
+        dodge= True,
+        edgecolor = "white",
+        linewidth = 1,
+        alpha = 0.5,
+        ).set_title(name)
+
+makefig(first_half, 'First Half')
+makefig(second_half, 'Second Half')
+
+
+
+   # copy['Section'] = 'first_half'
+       
+   # else:
+       # copy['Section'] = 'second_half'
+       
+       
+# test = find_half_time(copy)
+       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

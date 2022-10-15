@@ -19,12 +19,12 @@ import inflect
 animal1 = []
 names = []
 counter = 0
-directory = ['/Users/emmabarash/Lab/data/eb10_data']
+directory = ['/Users/emmabarash/Lab/data/eb11_data']
 
 for i in directory:
     print(i[-9:-5])
     for filename in os.listdir(i):
-        if i[-9:-5] == "eb10":
+        if i[-9:-5] == "eb11":
             animal1.append(filename)
         animal1.sort()
     
@@ -87,8 +87,8 @@ setup_for_trial_counts(animal1_files, animal1_line1_counts,
 p = inflect.engine()
 
 x = range(1,len(animal1_files)+1)
-plt.ylim(0,50)
-plt.title("EB10: deliveries across " + p.number_to_words(len(animal1_files)) + " taste session")
+plt.ylim(0,80)
+plt.title(filename[0:4] + ": deliveries across " + p.number_to_words(len(animal1_files)) + " taste session")
 plt.xlabel("sessions")
 plt.ylabel("deliveries")
 plt.scatter(x, animal1_line1_counts, c='blue')

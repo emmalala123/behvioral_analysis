@@ -146,16 +146,16 @@ def add_days_elapsed(finaldf):
 new_df = add_days_elapsed(finaldf)
 
 def cumulativedels(new_df):
-    csum = new_df.groupby(['AnID','Sessions','TasteID', 'Latencies']).Taste_Delivery.sum()
+    csum = new_df.groupby(['AnID','Sessions','TasteID', 'Latencies']).Delivery_Time.sum()
     csum = csum.reset_index()
     return csum
 
 
 csum = cumulativedels(new_df)
-means = csum.groupby(["TasteID","Sessions"]).Taste_Delivery.mean().reset_index()
+means = csum.groupby(["TasteID","Sessions"]).Delivery_Time.mean().reset_index()
 fig, ax = plt.subplots(figsize=(10,5))
-p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Taste_Delivery", hue = "TasteID", style = "AnID", s=65)
-p2 = sns.lineplot(data = means, x = "Sessions", y = "Taste_Delivery", hue = "TasteID")
+p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Delivery_Time", hue = "TasteID", style = "AnID", s=65)
+p2 = sns.lineplot(data = means, x = "Sessions", y = "Delivery_Time", hue = "TasteID")
 # Put the legend out of the figure
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
@@ -168,7 +168,7 @@ p2 = sns.lineplot(data = means, x = "Sessions", y = "Latencies", hue = "TasteID"
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 
-##latency plot   
+##latency plot  
 sns.barplot(deliveries_only['TasteID'], deliveries_only['Latencies'])
 cmap = plt.get_cmap('tab10')
 t = sns.catplot(
@@ -228,17 +228,31 @@ t = sns.catplot(
 
 copy = new_df
 
-# hard-code the time 35min 2100, 60min 3600
-#def find_half_time(copy):
-    
-   # copy['Section'] = None
-   
-first_half = copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb12')]
-second_half = copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600) & (copy['AnID'] == 'eb12')]
+copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11'), "Total_Del"] = copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11')].Taste_Delivery.sum()
+copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Total_Del"] = copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum()
+
+deliveries = []
+for idx,row in copy.iterrows():
+    deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
+    deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
+
+# hard-code the time 35min 2100, 60min 3600 - Thanks, Adam
+copy['Section'] = None
+copy.loc[copy['Time'] <= 1800, "Section"] = "First_Half"
+copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Section"] = "Second_Half"
+
+copybara = copy
+copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
+copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
+g = sns.relplot(data = copybara,kind = 'line',
+            x = 'Sessions', y = 'Taste_Delivery', col = 'Section', hue = 'TasteID')
+
 
 def makefig(dat, name):
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5), sharey=True)
     sns.set_theme(style='white')
     t = sns.catplot(
+        ax = axes[0],
         data=dat,
         kind='bar',
         x = 'Sessions',
@@ -263,25 +277,48 @@ def makefig(dat, name):
         linewidth = 1,
         alpha = 0.5,
         ).set_title(name)
+    
+    sns.set_theme(style='white')
+    t = sns.barplot(
+        ax = axes[1],
+        data=dat,
+        x='Section',
+        y='Delivery_Time',
+        hue='TasteID',
+        )
 
-makefig(first_half, 'First Half')
-makefig(second_half, 'Second Half')
+makefig(copy.loc[(copy['Section'] == 'First_Half') & (copy["AnID"] == 'eb12')], 'First Half')
+makefig(copy.loc[(copy['Section'] == 'Second_Half') & (copy["AnID"] == 'eb12')], 'Second Half')
 
+num_of_delivery = copy['Taste_Delivery'].sum()
 
+sns.set_theme(style='white')
+t = sns.catplot(
+    data=copy,
+    kind='bar',
+    x = 'Sessions',
+    y= 'Delivery_Time',
+    #col='Sessions',
+    hue = 'TasteID',
+    # color=cmap(0)
+    # height = 8,
+    aspect = 12/7,
+    hue_order = ['suc', 'qhcl']
+    )
 
-   # copy['Section'] = 'first_half'
-       
-   # else:
-       # copy['Section'] = 'second_half'
-       
-       
-# test = find_half_time(copy)
-       
-
-
-
-
-
+t = sns.swarmplot(
+    data=copy,
+    x = 'Sessions',
+    y='Delivery_Time',
+    # col = 'Sessions',
+    hue_order = ['suc', 'qhcl'],
+    hue = "TasteID",
+    #color = "TasteID",
+    dodge= True,
+    edgecolor = "white",
+    linewidth = 1,
+    alpha = 0.5,
+    )
 
 
 

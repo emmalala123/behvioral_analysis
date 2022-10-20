@@ -228,13 +228,13 @@ t = sns.catplot(
 
 copy = new_df
 
-copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11'), "Total_Del"] = copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11')].Taste_Delivery.sum()
-copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Total_Del"] = copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum()
+# copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11'), "Total_Del"] = copy.loc[(copy['Time'] <= 1800) & (copy['AnID'] == 'eb11')].Taste_Delivery.sum()
+# copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Total_Del"] = copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum()
 
-deliveries = []
-for idx,row in copy.iterrows():
-    deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
-    deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
+# deliveries = []
+# for idx,row in copy.iterrows():
+#     deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
+#     deliveries.append(copy.loc[copy['Time'] <= 1800].Taste_Delivery.sum())
 
 # hard-code the time 35min 2100, 60min 3600 - Thanks, Adam
 copy['Section'] = None

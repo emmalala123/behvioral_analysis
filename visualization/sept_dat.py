@@ -241,11 +241,22 @@ copy['Section'] = None
 copy.loc[copy['Time'] <= 1800, "Section"] = "First_Half"
 copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Section"] = "Second_Half"
 
+##### this is the OG
 copybara = copy
 copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
 copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
 g = sns.relplot(data = copybara,kind = 'line',
             x = 'Sessions', y = 'Taste_Delivery', col = 'Section', hue = 'TasteID')
+##### this is the OG
+
+copybara = copy
+copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
+copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
+sns.set(font_scale=1.6, rc={'axes.facecolor': 'white'})
+g = sns.relplot(data = copybara,
+            x = 'Sessions', y = 'Taste_Delivery', col = 'Section', row='AnID', hue = 'TasteID', aspect=12/8)
+g = sns.relplot(data = copybara,kind='line',
+            x = 'Sessions', y = 'Taste_Delivery', col = 'Section', row='AnID', hue = 'TasteID', aspect=12/8)
 
 
 def makefig(dat, name):
@@ -287,8 +298,8 @@ def makefig(dat, name):
         hue='TasteID',
         )
 
-makefig(copy.loc[(copy['Section'] == 'First_Half') & (copy["AnID"] == 'eb12')], 'First Half')
-makefig(copy.loc[(copy['Section'] == 'Second_Half') & (copy["AnID"] == 'eb12')], 'Second Half')
+makefig(copy.loc[(copy['Section'] == 'First_Half') & (copy["AnID"] == 'eb11')], 'First Half')
+makefig(copy.loc[(copy['Section'] == 'Second_Half') & (copy["AnID"] == 'eb11')], 'Second Half')
 
 num_of_delivery = copy['Taste_Delivery'].sum()
 
@@ -302,7 +313,7 @@ t = sns.catplot(
     hue = 'TasteID',
     # color=cmap(0)
     # height = 8,
-    aspect = 12/7,
+    aspect = 15/6,
     hue_order = ['suc', 'qhcl']
     )
 

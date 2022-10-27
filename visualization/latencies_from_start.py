@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Sat Oct 22 10:39:44 2022
-
-@author: emmabarash
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 18 12:05:56 2022
+Created on Thu Oct 27 09:46:27 2022
 
 @author: emmabarash
 """
@@ -17,7 +9,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os 
-import scipy.stats
 import seaborn as sns
 import glob
 import random
@@ -166,127 +157,3 @@ p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Delivery_Time", hue = "Ta
 p2 = sns.lineplot(data = means, x = "Sessions", y = "Delivery_Time", hue = "TasteID")
 # Put the legend out of the figure
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-
-csum = cumulativedels(new_df)
-means = csum.groupby(["TasteID","Sessions"]).Latencies.mean().reset_index()
-fig, ax = plt.subplots(figsize=(10,5))
-p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Latencies", hue = "TasteID", style = "AnID", s=65)
-p2 = sns.lineplot(data = means, x = "Sessions", y = "Latencies", hue = "TasteID")
-# Put the legend out of the figure
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-
-
-##latency plot  
-sns.barplot(deliveries_only['TasteID'], deliveries_only['Latencies'])
-cmap = plt.get_cmap('tab10')
-t = sns.catplot(
-    data=new_df,
-    x = 'TasteID',
-    y='Latencies',
-    col='Sessions',
-    kind='bar',
-    hue = 'TasteID',
-    order = ['suc', 'qhcl'],
-    # color=cmap(0)
-    )
-###
-sns.set_theme(style='white')
-t = sns.catplot(
-    data=new_df,
-    kind='bar',
-    x = 'Sessions',
-    y='Latencies',
-    #col='Sessions',
-    hue = 'TasteID',
-    #order = ['suc', 'qhcl']
-    # color=cmap(0)
-    # height = 8,
-    aspect = 12/7
-    )
-t = sns.swarmplot(
-    data=new_df,
-    x = 'Sessions',
-    y='Latencies',
-    #col = 'Sessions',
-    hue = "TasteID",
-    #color = "TasteID",
-    dodge= True,
-    edgecolor = "white",
-    linewidth = 1,
-    alpha = 0.5,
-    )
-# fig = t.get_figure()
-# fig.savefig('t.png', dpi=600)
-###
-t.fig.suptitle("All Animals Poke-to-Poke Latencies for Two Tastes", x=.80, fontsize=15)
-[plt.setp(ax.get_xticklabels(), rotation=45) for ax in t.axes.flat]
-t.fig.subplots_adjust(0.6,top=0.8, wspace=0.2)
-##
-
-cmap = plt.get_cmap('tab10')
-t = sns.catplot(
-    data=deliveries_only,
-    x = None,
-    y='Taste_Delivery',
-    col='AnID',
-    kind='count',
-    # order = ['suc', 'qhcl'],
-    color=cmap(0)
-    )
-
-copy = new_df
-
-# finding halves
-copy['Section'] = None
-copy.loc[copy['Time'] <= 1800, "Section"] = "First_Half"
-copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Section"] = "Second_Half"
-
-# plotting halves
-#line
-copybara = copy
-copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
-copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
-g = sns.relplot(data = copybara,kind = 'line',
-            x = 'Sessions', y = 'Taste_Delivery', col = 'Section', hue = 'TasteID')
-#bar
-g = sns.catplot(data = copybara,kind = "bar",
-            x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Half', "Second_Half"]).set(title="Deliveries across all sessions, N=2")
-
-
-thirds_df = new_df
-thirds_df['Section'] = None
-thirds_df.loc[thirds_df['Time'] <= 1200, "Section"] = "First_Third"
-thirds_df.loc[(thirds_df['Time'] > 1200) & (copy['Time'] <= 2400), "Section"] = "Second_Third"
-thirds_df.loc[(thirds_df['Time'] > 2400) & (copy['Time'] <= 3600), "Section"] = "Last_Third"
-
-# plotting thirds
-## altogether
-#line
-copybara = thirds_df
-copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
-copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
-g = sns.relplot(data = copybara,kind = 'line',
-            x = 'Sessions', y = 'Taste_Delivery', col = 'Section', hue = 'TasteID', col_order=(['First_Third', 'Second_Third', 'Last_Third']))
-#bar
-g = sns.catplot(data = copybara,kind = "bar",
-            x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
-
-    
-## separately
-g = sns.relplot(data = copybara,kind = 'line',
-            x = 'Sessions', y = 'Taste_Delivery', row='AnID', col = 'Section', hue = 'TasteID', col_order=(['First_Third', 'Second_Third', 'Last_Third']))
-#bar
-g = sns.catplot(data = copybara,kind = "bar",
-            x = 'Section', y = 'Taste_Delivery', col='AnID', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
-#box
-g = sns.boxenplot(data = copybara,
-            x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
-
-#heatmap
-del copybara['Section']
-del copybara['AnID']
-del copybara['TasteID']
-del copybara['Sessions']
-g = sns.heatmap(data = copybara)
-
-# get informatoin about missed trials - try to find the cues that were delivered

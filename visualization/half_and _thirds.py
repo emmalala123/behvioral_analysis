@@ -5,19 +5,10 @@ Created on Sat Oct 22 10:39:44 2022
 
 @author: emmabarash
 """
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Sep 18 12:05:56 2022
-
-@author: emmabarash
-"""
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import os 
-import scipy.stats
 import seaborn as sns
 import glob
 import random
@@ -235,24 +226,72 @@ t = sns.catplot(
     )
 
 copy = new_df
-
 # finding halves
 copy['Section'] = None
 copy.loc[copy['Time'] <= 1800, "Section"] = "First_Half"
 copy.loc[(copy['Time'] > 1800) & (copy['Time'] <= 3600), "Section"] = "Second_Half"
+
+# labeling concentrations
+copy['Concentration'] = None
+copy.loc[(copy['Sessions'] < 15) & (copy['TasteID'] == 'qhcl'), "Concentration"] = "5mM"
+copy.loc[(copy['Sessions'] >= 15) & (copy['TasteID'] == 'qhcl'), "Concentration"] = "10mM"
+copy.loc[copy['TasteID'] == 'suc', "Concentration"] = "0.3M"
+
+# test re-sums the deliveries without 'Section'
+test = copy
+test['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
+test = copy.groupby(['AnID','Sessions','TasteID', 'Concentration']).agg(sum).reset_index()
+fig, ax = plt.subplots(1,2, figsize=(17, 6))
+
+# plot all deliveries for all sections
+g = sns.lineplot(data = test.loc[test['AnID'] == 'eb11'],
+            x = 'Sessions', y = 'Taste_Delivery', hue = 'TasteID', ax=ax[0]).set(title='eb11')
+g = sns.lineplot(data = test.loc[test['AnID'] == 'eb12'],
+            x = 'Sessions', y = 'Taste_Delivery', hue = 'TasteID', ax=ax[1]).set(title='eb12')
+
+# plotting from 10mM qhcl
+fig, ax = plt.subplots(1,2, figsize=(17, 6))
+g = sns.lineplot(data = test.loc[(test['AnID'] == 'eb11') & (test['Sessions'] >= 15)],
+            x = 'Sessions', y = 'Taste_Delivery', hue = 'TasteID', ax=ax[0]).set(title='eb11')
+g = sns.lineplot(data = test.loc[(test['AnID'] == 'eb12') & (test['Sessions'] >= 15)],
+            x = 'Sessions', y = 'Taste_Delivery', hue = 'TasteID', ax=ax[1]).set(title='eb12')
+
 
 # plotting halves
 #line
 copybara = copy
 copybara['Taste_Delivery'] = copy['Taste_Delivery'].astype(int)
 copybara = copy.groupby(['Section','AnID','Sessions','TasteID']).agg(sum).reset_index()
+
+# plot all deliveries for all sections
+g = sns.relplot(data = copybara,kind = 'line',
+            x = 'Sessions', y = 'Taste_Delivery', col = 'AnID', hue = 'TasteID')
+
+# plot all deliveries for halves (All)
 g = sns.relplot(data = copybara,kind = 'line',
             x = 'Sessions', y = 'Taste_Delivery', col = 'Section', hue = 'TasteID')
+
+# plot all deliveries for halves (Individual)
+g = sns.relplot(data = copybara,kind = 'line',
+            x = 'Sessions', y = 'Taste_Delivery', row = 'Section', col='AnID', hue = 'TasteID')
+# just the 10mM
+g = sns.relplot(data = copybara.loc[copybara['Sessions'] >= 15],kind = 'line',
+            x = 'Sessions', y = 'Taste_Delivery', row = 'Section', col='AnID', hue = 'TasteID')
+
 #bar
-g = sns.catplot(data = copybara,kind = "bar",
+g = sns.catplot(data = copybara.loc[copybara['Sessions'] >= 15],kind = "bar",
             x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Half', "Second_Half"]).set(title="Deliveries across all sessions, N=2")
 
+# take p values from ttest
+first_qhcl = copybara.loc[(copybara['AnID'] == 'eb11') & (copybara['Sessions'] >= 15) & (copybara['TasteID'] == 'qhcl')]
+first_suc = copybara.loc[(copybara['AnID'] == 'eb11') & (copybara['Sessions'] >= 15) & (copybara['TasteID'] == 'suc')]
+stats.ttest_ind(first_qhcl['Taste_Delivery'], first_suc['Taste_Delivery'])
 
+first_qhcl = copybara.loc[(copybara['AnID'] == 'eb12') & (copybara['Sessions'] >= 15) & (copybara['TasteID'] == 'qhcl')]
+first_suc = copybara.loc[(copybara['AnID'] == 'eb12') & (copybara['Sessions'] >= 15) & (copybara['TasteID'] == 'suc')]
+stats.ttest_ind(first_qhcl['Taste_Delivery'], first_suc['Taste_Delivery'])
+
+# split sessions into thirds
 thirds_df = new_df
 thirds_df['Section'] = None
 thirds_df.loc[thirds_df['Time'] <= 1200, "Section"] = "First_Third"
@@ -282,11 +321,14 @@ g = sns.catplot(data = copybara,kind = "bar",
 g = sns.boxenplot(data = copybara,
             x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
 
-#heatmap
-del copybara['Section']
-del copybara['AnID']
-del copybara['TasteID']
-del copybara['Sessions']
-g = sns.heatmap(data = copybara)
+## separately -- just 10mM
+g = sns.relplot(data = copybara.loc[copybara['Sessions'] >= 15],kind = 'line',
+            x = 'Sessions', y = 'Taste_Delivery', row='AnID', col = 'Section', hue = 'TasteID', col_order=(['First_Third', 'Second_Third', 'Last_Third']))
+#bar
+g = sns.catplot(data = copybara.loc[copybara['Sessions'] >= 15],kind = "bar",
+            x = 'Section', y = 'Taste_Delivery', col='AnID', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
+#box
+g = sns.boxenplot(data = copybara.loc[copybara['Sessions'] >= 15],
+            x = 'Section', y = 'Taste_Delivery', hue = 'TasteID', order=['First_Third', "Second_Third", "Last_Third"]).set(title="Deliveries across all sessions, N=2")
 
-# get informatoin about missed trials - try to find the cues that were delivered
+

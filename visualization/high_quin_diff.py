@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Oct 27 09:46:27 2022
+Created on Thu Oct 27 12:36:05 2022
 
 @author: emmabarash
 """
@@ -112,8 +112,7 @@ for f in range(len(filelist)):
         
         for i, row in second_copy.iterrows():
             poke1 = np.where(second_copy['Taste_Delivery'] == True)[0]
-            # poke2 = poke1-1
-            poke2 = np.where(second_copy['Poke2'] == True)[0]
+            poke2 = poke1-1
         lat1 = second_copy['Time'].iloc[poke2].reset_index(drop=True)
         lat2 = second_copy['Time'].iloc[poke1].reset_index(drop=True)
         
@@ -158,42 +157,3 @@ p1 = sns.scatterplot(data = csum, x = "Sessions", y = "Delivery_Time", hue = "Ta
 p2 = sns.lineplot(data = means, x = "Sessions", y = "Delivery_Time", hue = "TasteID")
 # Put the legend out of the figure
 plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-
-sns.barplot(deliveries_only['TasteID'], deliveries_only['Latencies'])
-cmap = plt.get_cmap('tab10')
-t = sns.catplot(
-    data=new_df,
-    x = 'TasteID',
-    y='Latencies',
-    col='Sessions',
-    kind='bar',
-    hue = 'TasteID',
-    order = ['suc', 'qhcl'],
-    # color=cmap(0)
-    )
-###
-sns.set_theme(style='white')
-t = sns.catplot(
-    data=new_df,
-    kind='bar',
-    x = 'Sessions',
-    y='Latencies',
-    #col='Sessions',
-    hue = 'TasteID',
-    #order = ['suc', 'qhcl']
-    # color=cmap(0)
-    # height = 8,
-    aspect = 12/7
-    )
-t = sns.swarmplot(
-    data=new_df,
-    x = 'Sessions',
-    y='Latencies',
-    #col = 'Sessions',
-    hue = "TasteID",
-    #color = "TasteID",
-    dodge= True,
-    edgecolor = "white",
-    linewidth = 1,
-    alpha = 0.5,
-    )
